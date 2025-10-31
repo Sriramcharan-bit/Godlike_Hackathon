@@ -1,0 +1,5 @@
+{
+  "name": "QuestLearn",
+  "description": "An interactive learning map that allows users to track their progress through a series of quests, earning XP and unlocking new challenges. All progress is saved locally in the browser.",
+  "requestFramePermissions": []
+}
