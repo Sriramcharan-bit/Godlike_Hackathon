@@ -6,6 +6,9 @@ import { QUESTS, MAX_XP_PER_LEVEL } from './constants';
 import type { Quest } from './types';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { Confetti } from './components/Confetti';
+import { LandingPage } from './components/LandingPage';
+import { EndScreen } from './components/EndScreen';
+
 
 const App: React.FC = () => {
   const [totalXp, setTotalXp] = useState<number>(() => {
@@ -21,6 +24,11 @@ const App: React.FC = () => {
   const [activeQuest, setActiveQuest] = useState<Quest | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState<{ show: boolean; level: number | null }>({ show: false, level: null });
+
+  const [gameStarted, setGameStarted] = useState<boolean>(() => {
+    return localStorage.getItem('questlearn_started') === 'true';
+  });
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
 
   useEffect(() => {
@@ -61,6 +69,29 @@ const App: React.FC = () => {
     prevLevelRef.current = level;
   }, [level]);
 
+  const allQuestsCompleted = useMemo(() => completedNodes.length === QUESTS.length, [completedNodes, QUESTS]);
+
+  const handleStartQuest = () => {
+    setIsFadingOut(true);
+    setTimeout(() => {
+      setGameStarted(true);
+      localStorage.setItem('questlearn_started', 'true');
+    }, 500); // Match fade-out duration
+  };
+
+  const handleRestart = () => {
+    setTotalXp(0);
+    setCompletedNodes([]);
+    setActiveQuest(null);
+    setGameStarted(false);
+    setIsFadingOut(false);
+    prevLevelRef.current = 1;
+
+    localStorage.removeItem('questlearn_xp');
+    localStorage.removeItem('questlearn_completedNodes');
+    localStorage.removeItem('questlearn_started');
+  };
+
   const handleNodeClick = (quest: Quest) => {
     setActiveQuest(quest);
   };
@@ -84,19 +115,29 @@ const App: React.FC = () => {
       {showConfetti && <Confetti />}
       {levelUpInfo.show && levelUpInfo.level && <LevelUpAnimation level={levelUpInfo.level} />}
 
-      <header className="w-full max-w-4xl mb-8 sm:mb-16">
-        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">QuestLearn</h1>
-        <p className="text-center text-gray-400">Your interactive learning journey</p>
-        <XPBar xp={currentLevelXp} maxXp={xpForNextLevel} level={level} />
-      </header>
-      
-      <main className="flex-grow flex items-center justify-center w-full">
-        <LearningMap 
-          quests={QUESTS}
-          completedNodes={completedNodes}
-          onNodeClick={handleNodeClick}
-        />
-      </main>
+      {!gameStarted && <LandingPage onStart={handleStartQuest} isFadingOut={isFadingOut} />}
+
+      {gameStarted && (
+        <div className="w-full flex flex-col items-center flex-grow animate-fade-in-main">
+          <header className="w-full max-w-4xl mb-8 sm:mb-16">
+            <h1 className="text-4xl sm:text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">QuestLearn</h1>
+            <p className="text-center text-gray-400">Your interactive learning journey</p>
+            <XPBar xp={currentLevelXp} maxXp={xpForNextLevel} level={level} />
+          </header>
+          
+          <main className="flex-grow flex items-center justify-center w-full">
+            {allQuestsCompleted ? (
+              <EndScreen onRestart={handleRestart} />
+            ) : (
+              <LearningMap 
+                quests={QUESTS}
+                completedNodes={completedNodes}
+                onNodeClick={handleNodeClick}
+              />
+            )}
+          </main>
+        </div>
+      )}
 
       {activeQuest && (
         <QuestModal 
@@ -105,6 +146,15 @@ const App: React.FC = () => {
           onComplete={handleCompleteQuest}
         />
       )}
+      <style>{`
+          @keyframes fade-in-main {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in-main {
+              animation: fade-in-main 0.5s ease-out forwards;
+          }
+      `}</style>
     </div>
   );
 };
