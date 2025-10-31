@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { XPBar } from './components/XPBar';
 import { LearningMap } from './components/LearningMap';
 import { QuestModal } from './components/QuestModal';
-import { QUESTS, MAX_XP_PER_LEVEL } from './constants';
+import { QUESTS, XP_PER_LEVEL } from './constants';
 import type { Quest } from './types';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { Confetti } from './components/Confetti';
@@ -40,21 +40,9 @@ const App: React.FC = () => {
   }, [completedNodes]);
 
   const { level, currentLevelXp, xpForNextLevel } = useMemo(() => {
-    let level = 1;
-    let xpForCurrentLevel = 0;
-    let xpForNextLevel = MAX_XP_PER_LEVEL;
-    let xpAccumulator = MAX_XP_PER_LEVEL;
-
-    while (totalXp >= xpAccumulator) {
-        level++;
-        xpForCurrentLevel = xpAccumulator;
-        xpForNextLevel = Math.floor(MAX_XP_PER_LEVEL * Math.pow(1.1, level - 1));
-        xpAccumulator += xpForNextLevel;
-    }
-    
-    const currentLevelXp = totalXp - xpForCurrentLevel;
-    
-    return { level, currentLevelXp, xpForNextLevel };
+    const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
+    const currentLevelXp = totalXp % XP_PER_LEVEL;
+    return { level, currentLevelXp, xpForNextLevel: XP_PER_LEVEL };
   }, [totalXp]);
   
   const prevLevelRef = useRef(level);
@@ -69,7 +57,17 @@ const App: React.FC = () => {
     prevLevelRef.current = level;
   }, [level]);
 
-  const allQuestsCompleted = useMemo(() => completedNodes.length === QUESTS.length, [completedNodes, QUESTS]);
+  const allQuestsCompleted = useMemo(() => completedNodes.length === QUESTS.length, [completedNodes]);
+  const prevAllQuestsCompleted = useRef(allQuestsCompleted);
+
+  useEffect(() => {
+      if (allQuestsCompleted && !prevAllQuestsCompleted.current) {
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000); // Longer confetti for final win
+      }
+      prevAllQuestsCompleted.current = allQuestsCompleted;
+  }, [allQuestsCompleted]);
+
 
   const handleStartQuest = () => {
     setIsFadingOut(true);
@@ -90,6 +88,12 @@ const App: React.FC = () => {
     localStorage.removeItem('questlearn_xp');
     localStorage.removeItem('questlearn_completedNodes');
     localStorage.removeItem('questlearn_started');
+  };
+
+  const handleResetClick = () => {
+    if (window.confirm("Are you sure you want to reset all your progress? This action cannot be undone.")) {
+      handleRestart();
+    }
   };
 
   const handleNodeClick = (quest: Quest) => {
@@ -119,7 +123,14 @@ const App: React.FC = () => {
 
       {gameStarted && (
         <div className="w-full flex flex-col items-center flex-grow animate-fade-in-main">
-          <header className="w-full max-w-4xl mb-8 sm:mb-16">
+          <header className="relative w-full max-w-4xl mb-8 sm:mb-16">
+            <button 
+              onClick={handleResetClick}
+              className="absolute top-0 right-0 mt-1 mr-1 text-xs text-gray-400 hover:text-red-400 transition-colors duration-200 border border-gray-600 hover:border-red-500 rounded-full px-3 py-1 z-10"
+              aria-label="Reset all progress"
+            >
+              Reset Progress
+            </button>
             <h1 className="text-4xl sm:text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">QuestLearn</h1>
             <p className="text-center text-gray-400">Your interactive learning journey</p>
             <XPBar xp={currentLevelXp} maxXp={xpForNextLevel} level={level} />

@@ -10,8 +10,8 @@ interface LearningMapProps {
 
 export const LearningMap: React.FC<LearningMapProps> = ({ quests, completedNodes, onNodeClick }) => {
   return (
-    <div className="w-full flex items-center justify-center px-4">
-      <div className="relative flex items-center justify-between w-full max-w-3xl">
+    <div className="w-full flex items-center justify-center overflow-x-auto py-4">
+      <div className="relative flex items-center justify-between min-w-[700px] md:min-w-0 w-full max-w-3xl px-4">
         {quests.map((quest, index) => {
           const isCompleted = completedNodes.includes(quest.id);
           const isUnlocked = index === 0 || completedNodes.includes(quests[index - 1].id);

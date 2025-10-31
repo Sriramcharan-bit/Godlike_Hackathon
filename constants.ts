@@ -67,4 +67,4 @@ for num in numbers:
   }
 ];
 
-export const MAX_XP_PER_LEVEL = 100;
+export const XP_PER_LEVEL = 25;
