@@ -39,7 +39,7 @@ export const QUESTS: Quest[] = [
     description: 'This code is supposed to count to 5, but it runs forever! Fix the bug in the code editor and run it to complete the quest.', 
     xp: 15,
     type: 'code',
-    embedUrl: 'https://trinket.io/embed/python/1a56108f2f?runOption=run'
+    embedUrl: 'https://trinket.io/embed/python/f291079ab1?runOption=run'
   },
   {
     id: 4,
