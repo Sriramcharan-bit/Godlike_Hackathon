@@ -17,10 +17,19 @@ export const XPBar: React.FC<XPBarProps> = ({ xp, maxXp, level }) => {
       </div>
       <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden border-2 border-gray-600">
         <div 
-          className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500 ease-out" 
-          style={{ width: `${percentage}%` }}
+          className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500 ease-out animate-gradient-shimmer" 
+          style={{ width: `${percentage}%`, backgroundSize: '200% 100%' }}
         ></div>
       </div>
+      <style>{`
+        @keyframes gradient-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .animate-gradient-shimmer {
+            animation: gradient-shimmer 4s linear infinite;
+        }
+    `}</style>
     </div>
   );
 };
